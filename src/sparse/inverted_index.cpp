@@ -1,7 +1,7 @@
 /**
  * Inverted index for sparse vector similarity search.
  *
- * Sparse vectors represent documents as (term_id, weight) pairs — most
+ * Sparse vectors represent documents as (term_id, weight) pairs - most
  * entries are zero.  To find the top-K documents most similar to a query
  * vector we need to compute dot products:
  *
@@ -84,7 +84,7 @@ namespace ndd {
 
     /**
      * =====================================================================
-     * Search — batched dot-product accumulation with pruning
+     * Search - batched dot-product accumulation with pruning
      * =====================================================================
      *
      * Algorithm overview:
@@ -173,12 +173,17 @@ namespace ndd {
         float threshold = 0.0f;  // score of the current k-th best result
 
         // Start iterating from the smallest doc_id across all iterators.
-        ndd::idInt min_id = EXHAUSTED_DOC_ID;
-        for (size_t i = 0; i < iters.size(); i++) {
-            if (iters[i]->current_doc_id < min_id) {
-                min_id = iters[i]->current_doc_id;
+        auto minIterDocId = [&iters]() -> ndd::idInt {
+            ndd::idInt min_id = EXHAUSTED_DOC_ID;
+            for (size_t i = 0; i < iters.size(); i++) {
+                if (iters[i]->current_doc_id < min_id) {
+                    min_id = iters[i]->current_doc_id;
+                }
             }
-        }
+            return min_id;
+        };
+
+        ndd::idInt min_id = minIterDocId();
 
         // -- STEP 3: Main scoring loop, one batch per iteration --
 
@@ -197,7 +202,7 @@ namespace ndd {
             std::memset(scores_buf.data(), 0, batch_len * sizeof(float));
 
             /**
-             * 3a — Accumulate partial dot-product scores.
+             * 3a - Accumulate partial dot-product scores.
              *
              * For each posting list, walk entries with doc_id in
              * [batch_start, batch_end] and add weight * query_weight
@@ -236,7 +241,7 @@ namespace ndd {
                 it->advanceToNextLive();
             }
 
-            // 3b — Scan the score buffer and keep the top K.
+            // 3b - Scan the score buffer and keep the top K.
             for (size_t local = 0; local < batch_len; local++) {
                 float s = scores_buf[local];
                 if (s == 0.0f || s <= threshold) continue;
@@ -256,7 +261,7 @@ namespace ndd {
                 }
             }
 
-            // 3c — Drop any iterators that have no more entries.
+            // 3c - Drop any iterators that have no more entries.
             size_t write_idx = 0;
             for (size_t i = 0; i < iters.size(); i++) {
                 if (iters[i]->current_doc_id != EXHAUSTED_DOC_ID) {
@@ -266,27 +271,17 @@ namespace ndd {
             iters.resize(write_idx);
             if (iters.empty()) break;
 
-            // 3d — Find where the next batch starts.
-            min_id = EXHAUSTED_DOC_ID;
-            for (size_t i = 0; i < iters.size(); i++) {
-                if (iters[i]->current_doc_id < min_id) {
-                    min_id = iters[i]->current_doc_id;
-                }
-            }
+            // 3d - Find where the next batch starts.
+            min_id = minIterDocId();
 
-            // 3e — Pruning.  See pruneLongest() for details.
+            // 3e - Pruning.  See pruneLongest() for details.
             if (use_pruning && top_results.size() >= k) {
                 float new_min_score = threshold;
                 if (new_min_score != best_min_score) {
                     best_min_score = new_min_score;
                     pruneLongest(iters, new_min_score);
 
-                    min_id = EXHAUSTED_DOC_ID;
-                    for (size_t i = 0; i < iters.size(); i++) {
-                        if (iters[i]->current_doc_id < min_id) {
-                            min_id = iters[i]->current_doc_id;
-                        }
-                    }
+                    min_id = minIterDocId();
                 }
             }
         }
@@ -617,10 +612,10 @@ namespace ndd {
     }
 
     bool InvertedIndex::savePostingList(MDBX_txn* txn,
-                                   uint32_t term_id,
-                                   const std::vector<PostingListEntry>& entries,
-                                   uint32_t live_count,
-                                   float max_val)
+                                        uint32_t term_id,
+                                        const std::vector<PostingListEntry>& entries,
+                                        uint32_t live_count,
+                                        float max_val)
     {
         MDBX_val key;
         uint32_t tid = term_id;
@@ -932,7 +927,7 @@ namespace ndd {
 
         if (max_possible <= min_score) {
             if (others_min == EXHAUSTED_DOC_ID) {
-                // All other lists are done — skip everything remaining.
+                // All other lists are done - skip everything remaining.
                 longest->current_doc_id = EXHAUSTED_DOC_ID;
                 longest->current_entry_idx = longest->data_size;
             } else {

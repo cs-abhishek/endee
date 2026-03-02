@@ -107,7 +107,7 @@ namespace ndd {
 
         /**
          * =====================================================================
-         * PostingListView — zero-copy read into an MDBX page
+         * PostingListView - zero-copy read into an MDBX page
          * =====================================================================
          *
          * MDBX returns a pointer directly into its memory-mapped page.
@@ -124,7 +124,7 @@ namespace ndd {
 
         /**
          * =====================================================================
-         * PostingListIterator — walks one posting list during search
+         * PostingListIterator - walks one posting list during search
          * =====================================================================
          *
          * Points into the zero-copy MDBX data. Maintains a cursor
