@@ -34,7 +34,6 @@
 #include "core/ndd.hpp"
 #include "auth.hpp"
 #include "quant/common.hpp"
-#include "fifoworkq.hpp"
 #include "cpu_compat_check/check_avx_compat.hpp"
 #include "cpu_compat_check/check_arm_compat.hpp"
 
@@ -179,9 +178,6 @@ std::string get_mime_type(const std::string& path) {
 bool file_exists(const std::string& path) {
     return std::filesystem::exists(path) && std::filesystem::is_regular_file(path);
 }
-
-FIFOWorkQueue search_queue(16);   // 4 workers for search
-FIFOWorkQueue insert_queue(1);   // 2 workers for inserts
 
 int main(int argc, char** argv) {
 
@@ -733,31 +729,15 @@ int main(int argc, char** argv) {
 
                 LOG_DEBUG("Filter: " << filter_array.dump());
                 try {
-                    // auto search_response = index_manager.searchKNN(index_id,
-                    //                                                query,
-                    //                                                sparse_indices,
-                    //                                                sparse_values,
-                    //                                                k,
-                    //                                                filter_array,
-                    //                                                filter_params,
-                    //                                                include_vectors,
-                    //                                                ef);
-
-                    // Offload heavy work to FIFO queue
-                    auto result = search_queue.submit([&, query, k, filter_array, 
-                                                        filter_params, include_vectors, ef,
-                                                        index_id]() {
-                        return index_manager.searchKNN(index_id, query, sparse_indices,
-                                                        sparse_values, k, filter_array,
-                                                        filter_params, include_vectors, ef);
-                    });
-
-                    // Block the Crow thread briefly waiting for result,
-                    // but the WORK is serialized FIFO across all clients
-                    auto search_response = result.get();
-                    if(!search_response) {
-                        return json_error(404, "Index not found or search failed");
-                    }
+                    auto search_response = index_manager.searchKNN(index_id,
+                                                                    query,
+                                                                    sparse_indices,
+                                                                    sparse_values,
+                                                                    k,
+                                                                    filter_array,
+                                                                    filter_params,
+                                                                    include_vectors,
+                                                                    ef);
 
                     // Serialize the ResultSet using MessagePack
                     msgpack::sbuffer sbuf;
