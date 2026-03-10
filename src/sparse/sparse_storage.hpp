@@ -237,28 +237,28 @@ namespace ndd {
         bool initializeMDBX() {
             int rc = mdbx_env_create(&env_);
             if(rc != 0) {
-                LOG_ERROR("mdbx_env_create failed: " << rc);
+                LOG_ERROR("[" << index_id_ << "] mdbx_env_create failed: " << rc);
                 return false;
             }
 
             // Set geometry (max 1TB for now, can be configured)
             rc = mdbx_env_set_geometry(env_, -1, -1, TB, -1, -1, -1);
             if(rc != 0) {
-                LOG_ERROR("mdbx_env_set_geometry failed: " << rc);
+                LOG_ERROR("[" << index_id_ << "] mdbx_env_set_geometry failed: " << rc);
                 return false;
             }
 
             // Set maxdbs to allow named databases
             rc = mdbx_env_set_maxdbs(env_, 10);
             if(rc != 0) {
-                LOG_ERROR("mdbx_env_set_maxdbs failed: " << rc);
+                LOG_ERROR("[" << index_id_ << "] mdbx_env_set_maxdbs failed: " << rc);
                 return false;
             }
 
             std::error_code ec;
             std::filesystem::create_directories(db_path_, ec);
             if(ec) {
-                LOG_ERROR("create_directories failed: " << ec.message());
+                LOG_ERROR("[" << index_id_ << "] create_directories failed: " << ec.message());
                 return false;
             }
 
@@ -267,27 +267,27 @@ namespace ndd {
                                MDBX_NOSTICKYTHREADS | MDBX_NORDAHEAD | MDBX_LIFORECLAIM,
                                0664);
             if(rc != 0) {
-                LOG_ERROR("mdbx_env_open failed: " << rc << " path: " << db_path_);
+                LOG_ERROR("[" << index_id_ << "] mdbx_env_open failed: " << rc << " path: " << db_path_);
                 return false;
             }
 
             MDBX_txn* txn;
             rc = mdbx_txn_begin(env_, nullptr, MDBX_TXN_READWRITE, &txn);
             if(rc != 0) {
-                LOG_ERROR("mdbx_txn_begin failed: " << rc);
+                LOG_ERROR("[" << index_id_ << "] mdbx_txn_begin failed: " << rc);
                 return false;
             }
 
             rc = mdbx_dbi_open(txn, "sparse_docs", MDBX_CREATE | MDBX_INTEGERKEY, &docs_dbi_);
             if(rc != 0) {
-                LOG_ERROR("mdbx_dbi_open failed: " << rc);
+                LOG_ERROR("[" << index_id_ << "] mdbx_dbi_open failed: " << rc);
                 mdbx_txn_abort(txn);
                 return false;
             }
 
             rc = mdbx_txn_commit(txn);
             if(rc != 0) {
-                LOG_ERROR("mdbx_txn_commit failed: " << rc);
+                LOG_ERROR("[" << index_id_ << "] mdbx_txn_commit failed: " << rc);
                 return false;
             }
             return true;
