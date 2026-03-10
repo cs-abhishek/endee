@@ -2,7 +2,7 @@
 
 ## Format
 
-All production logs must go through `LOG_INFO`, `LOG_WARN`, or `LOG_ERROR` from [src/utils/log.hpp](/Users/shaleen/Endee/endee/src/utils/log.hpp).
+All production logs must go through `LOG_INFO`, `LOG_WARN`, or `LOG_ERROR` from [src/utils/log.hpp](../src/utils/log.hpp).
 
 The emitted format is:
 
@@ -91,6 +91,6 @@ The same overload shapes apply to `LOG_WARN` and `LOG_ERROR`.
 
 ## Where It Is Implemented
 
-- Macro dispatch and formatting live in [src/utils/log.hpp](/Users/shaleen/Endee/endee/src/utils/log.hpp).
-- Request-level validation and 500 logging live in [src/main.cpp](/Users/shaleen/Endee/endee/src/main.cpp).
-- Index lifecycle and persistence logs live in [src/core/ndd.hpp](/Users/shaleen/Endee/endee/src/core/ndd.hpp).
+- Macro dispatch and formatting live in [src/utils/log.hpp](../src/utils/log.hpp).
+- Request-level validation and 500 logging live in [src/main.cpp](../src/main.cpp).
+- Index lifecycle and persistence logs live in [src/core/ndd.hpp](../src/core/ndd.hpp).
