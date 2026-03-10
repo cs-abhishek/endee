@@ -380,3 +380,9 @@ Two SIMD-accelerated functions with implementations for AVX-512, AVX2, NEON, and
               │ merge      │  │  zero-copy blocks)  │
               └────────────┘  └─────────────────────┘
 ```
+
+# Potential Performance Improvements
+
+Several ideas could further improve performance:
+
+1. Allow a configurable fraction of the lowest-weight query terms to be ignored at search time. This reduces the number of posting-list iterators, which can improve latency while preserving most of the recall. Users can tune the fraction on a per-query basis to balance speed and accuracy.
