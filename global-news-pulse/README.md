@@ -2,6 +2,8 @@
 
 A real-time semantic news trend analyzer built on top of the [Endee](https://github.com/endee-io/endee) vector database. It fetches live articles from NewsAPI, encodes them with a sentence-transformer model, stores the embeddings in an Endee HNSW index, and exposes two search modes through a Streamlit dashboard: a fast semantic lookup and a multi-step agentic intelligence brief powered by Llama 3.3 70B via Groq.
 
+Online hosted link- https://abhishekk.streamlit.app/
+
 ---
 
 ## How it works
@@ -30,12 +32,12 @@ NewsAPI  -->  Sentence-Transformer  -->  Endee (HNSW + MDBX)
 
 ## Prerequisites
 
-| Requirement | Version |
-|---|---|
-| Python | 3.10+ |
-| Docker + Docker Compose | any recent version |
-| NewsAPI key | free tier at newsapi.org |
-| Groq API key | free tier at console.groq.com |
+| Requirement             | Version                       |
+| ----------------------- | ----------------------------- |
+| Python                  | 3.10+                         |
+| Docker + Docker Compose | any recent version            |
+| NewsAPI key             | free tier at newsapi.org      |
+| Groq API key            | free tier at console.groq.com |
 
 The Endee server runs inside Docker and is started with a single `docker compose up` command from the repository root.
 
@@ -153,43 +155,43 @@ All settings are read from environment variables. Copy `.env.example` to `.env` 
 
 ### Endee
 
-| Variable | Default | Description |
-|---|---|---|
-| `ENDEE_HOST` | `http://localhost:8080` | URL of the Endee server |
-| `ENDEE_AUTH_TOKEN` | _(empty)_ | Auth token if enabled on the server |
-| `ENDEE_INDEX_NAME` | `news_embeddings` | Name of the vector index |
-| `ENDEE_DIM` | `384` | Embedding dimension |
-| `ENDEE_SPACE_TYPE` | `cosine` | Distance metric |
-| `ENDEE_PRECISION` | `int16` | Quantisation precision |
-| `ENDEE_M` | `16` | HNSW M parameter |
-| `ENDEE_EF_CON` | `200` | HNSW ef_construction |
-| `ENDEE_TIMEOUT_SEC` | `30` | HTTP request timeout (seconds) |
+| Variable            | Default                 | Description                         |
+| ------------------- | ----------------------- | ----------------------------------- |
+| `ENDEE_HOST`        | `http://localhost:8080` | URL of the Endee server             |
+| `ENDEE_AUTH_TOKEN`  | _(empty)_               | Auth token if enabled on the server |
+| `ENDEE_INDEX_NAME`  | `news_embeddings`       | Name of the vector index            |
+| `ENDEE_DIM`         | `384`                   | Embedding dimension                 |
+| `ENDEE_SPACE_TYPE`  | `cosine`                | Distance metric                     |
+| `ENDEE_PRECISION`   | `int16`                 | Quantisation precision              |
+| `ENDEE_M`           | `16`                    | HNSW M parameter                    |
+| `ENDEE_EF_CON`      | `200`                   | HNSW ef_construction                |
+| `ENDEE_TIMEOUT_SEC` | `30`                    | HTTP request timeout (seconds)      |
 
 ### NewsAPI
 
-| Variable | Default | Description |
-|---|---|---|
-| `NEWS_API_KEY` | _(required)_ | NewsAPI key |
-| `NEWS_TOPICS` | `AI,technology,science,finance,climate` | Comma-separated topics to ingest |
-| `NEWS_PAGE_SIZE` | `100` | Articles per topic per request |
+| Variable         | Default                                 | Description                      |
+| ---------------- | --------------------------------------- | -------------------------------- |
+| `NEWS_API_KEY`   | _(required)_                            | NewsAPI key                      |
+| `NEWS_TOPICS`    | `AI,technology,science,finance,climate` | Comma-separated topics to ingest |
+| `NEWS_PAGE_SIZE` | `100`                                   | Articles per topic per request   |
 
 ### Embeddings
 
-| Variable | Default | Description |
-|---|---|---|
-| `EMBEDDING_MODEL` | `all-MiniLM-L6-v2` | sentence-transformers model name |
-| `EMBEDDING_BATCH_SIZE` | `64` | Encoding batch size |
+| Variable               | Default            | Description                      |
+| ---------------------- | ------------------ | -------------------------------- |
+| `EMBEDDING_MODEL`      | `all-MiniLM-L6-v2` | sentence-transformers model name |
+| `EMBEDDING_BATCH_SIZE` | `64`               | Encoding batch size              |
 
 ### LLM
 
-| Variable | Default | Description |
-|---|---|---|
-| `GROQ_API_KEY` | _(required)_ | Groq (or OpenAI) API key |
-| `LLM_BACKEND` | `groq` | Provider: `groq` or `openai` |
-| `LLM_MODEL` | `llama-3.3-70b-versatile` | Model identifier |
-| `LLM_TEMPERATURE` | `0.2` | Sampling temperature |
-| `LLM_MAX_TOKENS` | `2048` | Max tokens per completion |
-| `LLM_DIVERSITY_THRESHOLD` | `0.4` | Source diversity ratio below which the agent widens search |
+| Variable                  | Default                   | Description                                                |
+| ------------------------- | ------------------------- | ---------------------------------------------------------- |
+| `GROQ_API_KEY`            | _(required)_              | Groq (or OpenAI) API key                                   |
+| `LLM_BACKEND`             | `groq`                    | Provider: `groq` or `openai`                               |
+| `LLM_MODEL`               | `llama-3.3-70b-versatile` | Model identifier                                           |
+| `LLM_TEMPERATURE`         | `0.2`                     | Sampling temperature                                       |
+| `LLM_MAX_TOKENS`          | `2048`                    | Max tokens per completion                                  |
+| `LLM_DIVERSITY_THRESHOLD` | `0.4`                     | Source diversity ratio below which the agent widens search |
 
 ---
 
