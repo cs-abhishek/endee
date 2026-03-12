@@ -40,6 +40,8 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
+import numpy as np
+
 from config import llm_cfg, LLMConfig
 from database_manager import DatabaseManager, EndeeConnectionError, EndeeSearchError
 from embeddings.manager import EmbeddingManager
@@ -230,7 +232,7 @@ class NewsAgent:
         """
         vector = self._embed.encode_single(query)
         try:
-            return self._db.similarity_search(
+            results = self._db.similarity_search(
                 vector,
                 top_k=top_k,
                 source_filter=source_filter,
@@ -238,8 +240,82 @@ class NewsAgent:
                 ef=ef,
             )
         except (EndeeConnectionError, EndeeSearchError) as exc:
-            logger.error("Search failed for query '%s': %s", query, exc)
+            logger.error("Endee search failed for query '%s': %s", query, exc)
+            results = []
+
+        if not results:
+            logger.info(
+                "Endee returned 0 results for '%s' — falling back to live NewsAPI search.",
+                query,
+            )
+            results = self._live_search(query, top_k=top_k)
+
+        return results
+
+    # ------------------------------------------------------------------
+    # Fallback: live NewsAPI + in-memory cosine similarity
+    # ------------------------------------------------------------------
+
+    def _live_search(
+        self,
+        query: str,
+        top_k: int = 10,
+    ) -> list[dict[str, Any]]:
+        """
+        Fetch live articles from NewsAPI for *query* and rank them by cosine
+        similarity to the encoded query vector.
+
+        Called automatically when Endee is unreachable or its index is empty.
+        Requires NEWS_API_KEY to be configured.
+        """
+        from ingestion.news_provider import NewsProvider
+
+        try:
+            provider = NewsProvider()
+        except ValueError as exc:
+            logger.warning("Live search unavailable (no NEWS_API_KEY): %s", exc)
             return []
+
+        try:
+            articles = provider.fetch_articles(query, sort_by="relevancy")
+        except RuntimeError as exc:
+            logger.error("NewsAPI fetch failed for '%s': %s", query, exc)
+            return []
+
+        if not articles:
+            return []
+
+        # Embed query and all article texts
+        texts = [a["embed_text"] for a in articles]
+        query_vec = np.array(self._embed.encode_single(query), dtype=np.float32)
+        article_vecs = np.array(self._embed.encode(texts), dtype=np.float32)
+
+        # Cosine similarity == dot product because fastembed normalises to unit sphere
+        scores: np.ndarray = article_vecs @ query_vec
+
+        top_idxs = np.argsort(scores)[::-1][:top_k]
+
+        results: list[dict[str, Any]] = []
+        for i in top_idxs:
+            a = articles[int(i)]
+            results.append({
+                "id":           a["id"],
+                "similarity":   float(scores[i]),
+                "title":        a.get("title", ""),
+                "url":          a.get("url", ""),
+                "source":       a.get("source", ""),
+                "category":     a.get("category", ""),
+                "published_at": a.get("published_at", ""),
+                "description":  a.get("description", ""),
+                "content":      a.get("content", ""),
+                "author":       a.get("author", ""),
+            })
+
+        logger.info(
+            "Live search returned %d result(s) for '%s' (NEWS_API fallback).",
+            len(results), query,
+        )
+        return results
 
     # ------------------------------------------------------------------
     # Internal: diversity check
@@ -608,7 +684,8 @@ class NewsAgent:
                 topic=topic,
                 summary=(
                     f"## No results found for '{topic}'\n\n"
-                    "The Endee index may be empty.  Run `python main_ingest.py` first."
+                    "Could not retrieve articles from Endee or NewsAPI.\n"
+                    "Check that NEWS_API_KEY is configured."
                 ),
                 sub_trends=[],
                 sources=[],
