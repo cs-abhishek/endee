@@ -284,7 +284,15 @@ def main() -> None:
 
     # ── Search execution ──────────────────────────────────────────────────────
     if submitted and query.strip():
-        agent = get_agent()
+        try:
+            agent = get_agent()
+        except Exception as exc:
+            st.error(
+                f"Could not initialise the search agent: {exc}\n\n"
+                "Make sure GROQ\_API\_KEY and ENDEE\_HOST are configured. "
+                "On Streamlit Cloud add them under **Settings > Secrets**."
+            )
+            st.stop()
 
         if deep_dive:
             # ── Agentic mode ──────────────────────────────────────────────────
@@ -301,33 +309,39 @@ def main() -> None:
                 "Synthesising intelligence brief …",
             ]
 
-            with st.spinner("Running agentic pipeline …"):
-                # Show step progress while the agent works
-                progress_bar = st.progress(0, text=steps[0])
-                for i, step_text in enumerate(steps):
-                    progress_bar.progress(
-                        int((i / len(steps)) * 100), text=f"Step {i+1}/{len(steps)}: {step_text}"
-                    )
-                    if i == 0:
-                        # Kick off the actual work after first step shown
-                        t0 = time.monotonic()
-                        brief = agent.agentic_search(query.strip())
-                        break
+            try:
+                with st.spinner("Running agentic pipeline …"):
+                    # Show step progress while the agent works
+                    progress_bar = st.progress(0, text=steps[0])
+                    for i, step_text in enumerate(steps):
+                        progress_bar.progress(
+                            int((i / len(steps)) * 100), text=f"Step {i+1}/{len(steps)}: {step_text}"
+                        )
+                        if i == 0:
+                            # Kick off the actual work after first step shown
+                            t0 = time.monotonic()
+                            brief = agent.agentic_search(query.strip())
+                            break
 
-                progress_bar.progress(100, text="Done ✓")
+                    progress_bar.progress(100, text="Done ✓")
 
-            status_box.empty()
-            render_agentic_brief(brief)
+                status_box.empty()
+                render_agentic_brief(brief)
+            except Exception as exc:
+                st.error(f"Agentic search failed: {exc}")
 
         else:
             # ── Simple search mode ────────────────────────────────────────────
-            with st.spinner("Searching …"):
-                t0 = time.monotonic()
-                results = agent.simple_search(query.strip())
-                elapsed = round(time.monotonic() - t0, 3)
+            try:
+                with st.spinner("Searching …"):
+                    t0 = time.monotonic()
+                    results = agent.simple_search(query.strip())
+                    elapsed = round(time.monotonic() - t0, 3)
 
-            st.caption(f"Returned {len(results)} result(s) in {elapsed}s")
-            render_simple_results(results)
+                st.caption(f"Returned {len(results)} result(s) in {elapsed}s")
+                render_simple_results(results)
+            except Exception as exc:
+                st.error(f"Search failed: {exc}")
 
     elif submitted:
         st.warning("Please enter a search query.")

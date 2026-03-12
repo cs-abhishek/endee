@@ -84,12 +84,18 @@ class LLMClient:
 
     def __init__(self, config: LLMConfig = llm_cfg) -> None:
         self._cfg = config
-        self._client = self._build_client()
+        self._client: Any = None  # lazy — built on first complete() call
         logger.info(
             "LLMClient initialised — backend=%s  model=%s",
             self._cfg.backend,
             self._cfg.model,
         )
+
+    def _get_client(self) -> Any:
+        """Return the SDK client, building it on the first call."""
+        if self._client is None:
+            self._client = self._build_client()
+        return self._client
 
     def _build_client(self) -> Any:
         """
@@ -193,7 +199,7 @@ class LLMClient:
         n = max_tokens if max_tokens is not None else self._cfg.max_tokens
 
         try:
-            response = self._client.chat.completions.create(
+            response = self._get_client().chat.completions.create(
                 model=self._cfg.model,
                 messages=full_messages,
                 temperature=t,
