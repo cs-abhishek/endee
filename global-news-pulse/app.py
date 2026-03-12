@@ -289,7 +289,7 @@ def main() -> None:
         except Exception as exc:
             st.error(
                 f"Could not initialise the search agent: {exc}\n\n"
-                "Make sure GROQ\_API\_KEY and ENDEE\_HOST are configured. "
+                "Make sure GROQ_API_KEY and ENDEE_HOST are configured. "
                 "On Streamlit Cloud add them under **Settings > Secrets**."
             )
             st.stop()

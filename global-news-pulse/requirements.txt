@@ -3,8 +3,7 @@ requests>=2.31.0          # HTTP client for Endee REST API
 msgpack>=1.0.7            # Decode Endee's binary search responses
 
 # ── Embeddings ───────────────────────────────────────────────────────────────
-sentence-transformers>=2.7.0   # all-MiniLM-L6-v2
-torch>=2.0.0                   # sentence-transformers backend
+fastembed>=0.3.0               # ONNX-based embeddings, no torch required
 
 # ── Data ingestion ───────────────────────────────────────────────────────────
 newsapi-python>=0.2.7     # NewsAPI client
