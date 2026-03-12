@@ -1,0 +1,28 @@
+# ── Secret / sensitive files ──────────────────────────────────────────────────
+.env
+*.pem
+*.key
+
+# ── Python artefacts ──────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── sentence-transformers model cache ─────────────────────────────────────────
+# Models are downloaded on first run; no need to commit them
+.cache/
+
+# ── IDE / OS ──────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
